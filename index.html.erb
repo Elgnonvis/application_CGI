@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Applications CGI</title>
+</head>
+<body>
+  <h1>Exploitation de la base de données Goya</h1>
+    <% require 'pg' %>
+    <% connection = PG::connect(dbname: "goya") %>
+    <% connection.internal_encoding = "UTF-8" %>
+
+    <% not_autoCons = connection.exec("select * from crops where give_for != '自家消費';")%> 
+    <% goyaTab = [] %>
+    <% not_autoCons.each do |goya| %>
+        <% goyaTab << "Length: #{goya["length"]}, Weight: #{goya["weight"]}, Quality: #{goya["quality"]}, Give_for: #{goya["give_for"]}, Date: #{goya["date"]}" %>
+    <% end %>
+  
+  <h2>Afficher les données sur Goya lorsqu'il ne s'agait pas de l'auto-consommation</h2>
+    <form action="validation.cgi" method="POST">
+       Appuyez sur le bouton ci-dessous pour accéder à la page d'informations concernant les goyas dont le con....<br><br>
+      <input type="hidden"  name="goya" value= "<%= goyaTab.join(' |')%>" ><br>
+      <input type="submit" name="Soumettre" >
+    </form>
+
+    <% result = connection.exec("select * from crops where quality = 'f';") %>
+    <% data = [] %>
+    <% result.each do |goya| %>
+      <%  data << "Length: #{goya["length"]}, Weight: #{goya["weight"]}, Quality: #{goya["quality"]}, Give_for: #{goya["give_for"]}, Date: #{goya["date"]}" %>
+    <% end %>
+
+    <h2>Afficher les données de goya de mauvaise qualité</h2>
+    <form action="validation.cgi" method="POST">
+       Appuyez sur le bouton ci-dessous pour accéder à la page d'informations concernant les goyas de mauvaise qualité.<br><br>
+       <!-- Attribuez les données que vous souhaitez envoyer à value -->
+       <!-- Utilisez name = "goya" comme marqueur d'information -->
+      <input type="hidden" name="goya" value="<%= data.join(' ') %>">
+      <input type="submit" name="Soumettre" >
+    </form>
+</body>
+</html>
